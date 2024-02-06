@@ -10,7 +10,8 @@ from .views import (
     expenses,
     expense,
     shortUrl,
-    shortUrlDel
+    shortUrlDel,
+    AvatarUploadView
 )
 
 urlpatterns = [
@@ -29,4 +30,5 @@ urlpatterns = [
     path('expenses/<int:id>', expense),
     path('shorturls/', shortUrl, name='shorturls'),
     path('<str:id>/', shortUrlDel),
+    path('create/avatar/', AvatarUploadView.as_view(), name='avatar-upload'),
 ]

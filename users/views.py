@@ -2,11 +2,12 @@
 from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .models import Task, Expense, ShortUrl
-from .serializers import TaskSerializer, ExpenseSerializer, ShortUrlSerializer
+from .serializers import AvatarSerializer, TaskSerializer, ExpenseSerializer, ShortUrlSerializer
 from djoser.social.views import ProviderAuthView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -122,6 +123,19 @@ class LogoutView(APIView):
         response.delete_cookie(key='refresh', samesite='none')
 
         return response
+    
+class AvatarUploadView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, *args, **kwargs):
+        serializer = AvatarSerializer(instance=request.user, data=request.data, context={'request': request})
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        else:
+            return Response(serializer.errors, status=500)
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])

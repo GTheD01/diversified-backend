@@ -6,6 +6,7 @@ from django.contrib.auth.models import (
     PermissionsMixin
 )
 
+import os
 
 class UserAccountManager(BaseUserManager):
     def create_user(self, email, password=None, **kwargs):
@@ -38,11 +39,14 @@ class UserAccountManager(BaseUserManager):
 
         return user
 
+def get_upload_path(instance, filename):
+    return os.path.join('images', 'avatars', str(instance.pk), filename)
 
 class UserAccount(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     email = models.EmailField(unique=True, max_length=255)
+    avatar = models.ImageField(upload_to=get_upload_path, blank=True, null=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
