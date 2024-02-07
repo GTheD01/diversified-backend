@@ -130,12 +130,20 @@ class AvatarUploadView(APIView):
 
     def post(self, request, *args, **kwargs):
         serializer = AvatarSerializer(instance=request.user, data=request.data, context={'request': request})
-
+        
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=200)
         else:
             return Response(serializer.errors, status=500)
+    
+    def delete(self, request, *args, **kwargs):
+        user = request.user
+        try:
+            user.avatar.delete()
+            return Response({'message': 'Avatar deleted successfully'})
+        except Exception as e:
+            return Response({'message': str(e)}, status=500)
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])

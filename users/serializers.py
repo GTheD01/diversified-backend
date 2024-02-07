@@ -23,6 +23,7 @@ class AvatarSerializer(ModelSerializer):
     
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+
         if instance.avatar:
             representation['avatar'] = self.context['request'].build_absolute_uri(instance.avatar.url)
         return representation
