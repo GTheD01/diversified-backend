@@ -1,4 +1,4 @@
-
+import os
 from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
@@ -18,6 +18,8 @@ from rest_framework_simplejwt.views import (
 import string
 import random
 import re
+
+
 
 
 class CustomProviderAuthView(ProviderAuthView):
@@ -129,6 +131,9 @@ class AvatarUploadView(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request, *args, **kwargs):
+        if request.user.avatar:
+            request.user.avatar.delete()
+
         serializer = AvatarSerializer(instance=request.user, data=request.data, context={'request': request})
         
         if serializer.is_valid():
@@ -141,6 +146,10 @@ class AvatarUploadView(APIView):
         user = request.user
         try:
             user.avatar.delete()
+            # Delete associated folder if empty
+            pk_folder_path = os.path.abspath(os.path.join(os.getcwd(), 'media' , 'images', 'avatars', str(user.pk)))
+            if os.path.exists(pk_folder_path) and not os.listdir(pk_folder_path):
+                os.rmdir(pk_folder_path)
             return Response({'message': 'Avatar deleted successfully'})
         except Exception as e:
             return Response({'message': str(e)}, status=500)
