@@ -116,7 +116,6 @@ class CustomTokenVerifyView(TokenVerifyView):
 
         return super().post(request, *args, **kwargs)
 
-
 class LogoutView(APIView):
     def post(self, request, *args, **kwargs):
         response = Response(status=status.HTTP_204_NO_CONTENT)
@@ -126,6 +125,8 @@ class LogoutView(APIView):
 
         return response
     
+
+# Upload avatar endpoint
 class AvatarUploadView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
@@ -154,6 +155,8 @@ class AvatarUploadView(APIView):
         except Exception as e:
             return Response({'message': str(e)}, status=500)
 
+
+# Tasks endpoints
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def tasks(request):
@@ -189,6 +192,7 @@ def task(request, id):
         task.delete()
         return Response("Task deleted")
 
+# Expenses endpoints
 @api_view(['GET', 'POST'])
 def expenses(request):
     if request.method == "GET":
@@ -231,6 +235,19 @@ regex = re.compile(
         r'(?::\d+)?' # optional port
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
+
+# Generate short url
+def generate_short_url():
+    chars = list(string.ascii_letters)
+    random_chars = ''
+    for i in range(6):
+        random_chars += random.choice(chars)
+    while len(ShortUrl.objects.filter(short_url=random_chars)) != 0:
+        for i in range(6):
+            random_chars += random.choice(chars)
+    return random_chars
+
+# Short url endpoints
 @api_view(['GET', 'POST'])
 def shortUrl(request):
     if request.method == 'GET':
@@ -241,20 +258,14 @@ def shortUrl(request):
     
 
     if request.method == "POST":
-        chars = list(string.ascii_letters)
-        random_chars = ''
-        for i in range(6):
-            random_chars += random.choice(chars)
-        while len(ShortUrl.objects.filter(short_url=random_chars)) != 0:
-            for i in range(6):
-                random_chars += random.choice(chars)
+        short_url = generate_short_url()
         original_url = request.data['original_url']
         match = re.match(regex, original_url) is not None
         if not match:
             return Response("Url not valid, url example: http://www....")
         shortened_url = ShortUrl.objects.create(
             original_url = original_url,
-            short_url = random_chars,
+            short_url = short_url,
             created_by = request.user
         )
         serializer = ShortUrlSerializer(shortened_url, many=False)
