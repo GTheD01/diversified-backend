@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'social_django',
 
     'users',
+    
 ]
 
 MIDDLEWARE = [
@@ -233,6 +234,14 @@ SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'email, first_name, last_name'
 }
+
+# Security Middleware
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_BROWSER_XSS_FILTER = True
+
+
+# setting in Django is used to enforce HTTPS on your site by redirecting HTTP requests to HTTPS
+# SECURE_SSL_REDIRECT = True
 
 
 # CORS_ALLOW_ALL_ORIGINS = True

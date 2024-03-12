@@ -6,6 +6,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+
 from .models import Task, Expense, ShortUrl
 from .serializers import AvatarSerializer, TaskSerializer, ExpenseSerializer, ShortUrlSerializer
 from djoser.social.views import ProviderAuthView
@@ -15,12 +16,13 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView
 )
 
+from functools import wraps
+from django.core.cache import cache
+
+import time
 import string
 import random
 import re
-
-
-
 
 class CustomProviderAuthView(ProviderAuthView):
     def post(self, request, *args, **kwargs):
@@ -134,6 +136,12 @@ class AvatarUploadView(APIView):
     def post(self, request, *args, **kwargs):
         if request.user.avatar:
             request.user.avatar.delete()
+        
+        uploaded_file = request.data.get('avatar')
+        max_size = 5 * 1024 * 1024
+
+        if uploaded_file and uploaded_file.size > max_size:
+            return Response({'error': 'File too large'}, status=400)
 
         serializer = AvatarSerializer(instance=request.user, data=request.data, context={'request': request})
         
@@ -194,6 +202,7 @@ def task(request, id):
 
 # Expenses endpoints
 @api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
 def expenses(request):
     if request.method == "GET":
         user = request.user
@@ -211,6 +220,7 @@ def expenses(request):
         return Response(serializer.data)
 
 @api_view(['PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
 def expense(request, id):
     expense = Expense.objects.get(pk=id)
     if request.method == "PUT":
@@ -247,8 +257,27 @@ def generate_short_url():
             random_chars += random.choice(chars)
     return random_chars
 
+
+# Rate Limit for Short urls
+def ratelimit_post(rate_limit, time_window):
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapped_view(request, *args, **kwargs):
+            if request.method == 'POST':
+                ip_address = request.META.get('REMOTE_ADDR')
+                cache_key = f'ratelimit:{ip_address}'
+                request_count = cache.get(cache_key, 0)
+                if request_count >= rate_limit:
+                    return Response({'error': 'Rate limit exceeded'}, status=429)
+                cache.set(cache_key, request_count + 1, time_window)
+            return view_func(request, *args, **kwargs)
+        return wrapped_view
+    return decorator
+
 # Short url endpoints
 @api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+@ratelimit_post(rate_limit=2, time_window=100)
 def shortUrl(request):
     if request.method == 'GET':
         user = request.user
@@ -272,6 +301,7 @@ def shortUrl(request):
         return Response(serializer.data)
 
 @api_view(['DELETE', 'GET'])
+@permission_classes([IsAuthenticated])
 def shortUrlDel(request, id):
     # Using id as a number/integer to delete practicular short url
     if request.method == "DELETE":
