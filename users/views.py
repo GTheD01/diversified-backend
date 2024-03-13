@@ -175,9 +175,20 @@ def tasks(request):
         return Response(serializer.data)
     
     if request.method == 'POST':
+        label = request.data.get('label')
+        description = request.data.get('description')
+
+        # Sanitize and validate input
+        if not label or not description:
+            return Response({'error': 'Label and description are required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Ensure label contains only alphanumeric characters
+        if not label.isalnum():
+            return Response({'error': 'Label should contain only alphanumeric characters'}, status=status.HTTP_400_BAD_REQUEST)
+
         task = Task.objects.create(
-            label = request.data['label'],
-            description = request.data['description'],
+            label = label,
+            description = description,
             created_by = request.user
         )
         serializer = TaskSerializer(task, many=False)
@@ -188,6 +199,7 @@ def tasks(request):
 def task(request, id):
     task = Task.objects.get(pk=id)
 
+    # Not used at the moment (Put)
     if request.method == "PUT":
         task.label = request.data['label']
         task.description = request.data['description']
@@ -211,6 +223,25 @@ def expenses(request):
         return Response(serializer.data)
     
     if request.method == "POST":
+        label = request.data.get('label')
+        price = request.data.get('price')
+
+        # Sanitize and validate input
+        if not label or not price:
+            return Response({'error': 'Label and price are required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Ensure label contains only alphanumeric characters
+        if not label.isalnum():
+            return Response({'error': 'Label should contain only alphanumeric characters'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Ensure price is a positive number
+        try:
+            price = float(price)
+            if price <= 0:
+                return Response({'error': 'Price should be a positive number'}, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError:
+            return Response({'error': 'Invalid price format'}, status=status.HTTP_400_BAD_REQUEST)
+
         expense = Expense.objects.create(
             label = request.data['label'],
             price = request.data['price'],
@@ -259,8 +290,9 @@ def generate_short_url():
 
 
 # Rate Limit for Short urls
+# Used just in case user posting/creating short urls to prevent malicious attacks/brute force
 def ratelimit_post(rate_limit, time_window):
-    def decorator(view_func):
+    def decorator(view_func): # View func refers to the function we want to wrap in this case (shortUrl)
         @wraps(view_func)
         def wrapped_view(request, *args, **kwargs):
             if request.method == 'POST':
@@ -291,7 +323,7 @@ def shortUrl(request):
         original_url = request.data['original_url']
         match = re.match(regex, original_url) is not None
         if not match:
-            return Response("Url not valid, url example: http://www....")
+            return Response({'error':"Url not valid, url example: http://www...."}, status=status.HTTP_400_BAD_REQUEST)
         shortened_url = ShortUrl.objects.create(
             original_url = original_url,
             short_url = short_url,

@@ -241,7 +241,8 @@ SECURE_BROWSER_XSS_FILTER = True
 
 
 # setting in Django is used to enforce HTTPS on your site by redirecting HTTP requests to HTTPS
-# SECURE_SSL_REDIRECT = True
+# if DEVELOPMENT_MODE is True:
+#     SECURE_SSL_REDIRECT = True
 
 
 # CORS_ALLOW_ALL_ORIGINS = True
