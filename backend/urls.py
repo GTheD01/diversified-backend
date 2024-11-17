@@ -22,7 +22,10 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('djoser.urls')),
-    path('api/', include('users.urls'))
+    path('api/', include('users.urls')),
+    path('api/tasks/', include("task.urls")),
+    path('api/expenses/', include("expense.urls")),
+    path('api/shorturls/', include("shorturl.urls"))
 ]
 
 if settings.DEBUG:

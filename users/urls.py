@@ -5,12 +5,6 @@ from .views import (
     CustomTokenRefreshView,
     CustomTokenVerifyView,
     LogoutView,
-    tasks,
-    task,
-    expenses,
-    expense,
-    shortUrl,
-    shortUrlDel,
     AvatarUploadView
 )
 
@@ -25,11 +19,5 @@ urlpatterns = [
     path('jwt/refresh/', CustomTokenRefreshView.as_view()),
     path('jwt/verify/', CustomTokenVerifyView.as_view()),
     path('logout/', LogoutView.as_view()),
-    path('tasks/', tasks, name='tasks'),
-    path('tasks/<int:id>', task),
-    path('expenses/', expenses, name='expenses'),
-    path('expenses/<int:id>', expense),
-    path('shorturls/', shortUrl, name='shorturls'),
-    path('<str:id>/', shortUrlDel),
     path('create/avatar/', AvatarUploadView.as_view(), name='avatar-upload'),
 ]

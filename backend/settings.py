@@ -59,6 +59,9 @@ INSTALLED_APPS = [
     'social_django',
 
     'users',
+    'task',
+    'expense',
+    'shorturl',
     
 ]
 
